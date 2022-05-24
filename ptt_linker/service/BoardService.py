@@ -142,6 +142,8 @@ class BoardService:
         while (len(articles)-skip) < take:
             if (not page):
                 page = _get_prev_page_index(html)
+            elif (not desc):
+                page += 1
             else:
                 page -= 1
 
