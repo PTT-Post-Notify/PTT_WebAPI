@@ -23,7 +23,8 @@ def create_article(input: Element) -> Article:
     return article
 
 
-def _build_url(bid: str, title: str, author: str, score: int, page: int) -> str:
+def _build_url(bid: str, page: int,
+               title: str = None, author: str = None, score: int = None) -> str:
 
     url = f'https://www.ptt.cc/bbs/{bid}/'
     searchParams = []
@@ -75,6 +76,8 @@ class BoardService:
     def fetch_board_articles(self, bid: str, title: str, author: str, score: int,
                              take: int, skip: int, desc: bool) -> Board:
 
+        return self.fetch_board_articles_without_query_params(bid=bid, take=take, skip=skip, desc=desc)
+
         page = None
         if (title or author or score):
             page = 1
@@ -116,3 +119,41 @@ class BoardService:
                                                take: int, skip: int, desc: bool) -> Board:
 
         pass
+
+    def fetch_board_articles_without_query_params(self, bid: str,
+                                                  take: int, skip: int,
+                                                  desc: bool) -> Board:
+
+        page = None
+        if (not desc):
+            page = 1
+
+        articles = []
+
+        url = _build_url(bid=bid, page=page)
+        html = self._fetch_html(url)
+
+        result = _parse_page_articles(html)
+
+        if (desc):
+            result.reverse()
+        articles += result
+
+        while (len(articles)-skip) < take:
+            if (not page):
+                page = _get_prev_page_index(html)
+            else:
+                page -= 1
+
+            url = _build_url(bid=bid, page=page)
+            html = self._fetch_html(url)
+
+            result = _parse_page_articles(html)
+
+            if(desc):
+                result.reverse()
+            articles += result
+
+        board = Board(bid=bid, articles=articles[skip:take+skip], header=bid)
+
+        return board
