@@ -56,13 +56,17 @@ def _parse_page_articles(html: HTML) -> list[Article]:
     return articles
 
 
-def _get_prev_page_index(html: HTML):
+def _get_prev_page_index(html: HTML) -> int:
     btnGroup = html.find(
         '.btn-group-paging', first=True).find('.wide')
     prevlink: str = btnGroup[1].attrs.get('href')
+    if (not prevlink):
+        return None
     lastRoute = prevlink.split('/')[-1]
     if ('.html' in lastRoute):
-        return lastRoute[5:-5]
+        return int(lastRoute[5:-5])
+    elif('search' in lastRoute):
+        return int(lastRoute.split('&q')[0][12:])
     return None
 
 
@@ -76,49 +80,45 @@ class BoardService:
     def fetch_board_articles(self, bid: str, title: str, author: str, score: int,
                              take: int, skip: int, desc: bool) -> Board:
 
-        return self.fetch_board_articles_without_query_params(bid=bid, take=take, skip=skip, desc=desc)
-
-        page = None
         if (title or author or score):
-            page = 1
-        articles = []
+            return self.fetch_board_atticles_with_query_params(bid=bid, take=take, skip=skip, desc=desc,
+                                                               title=title, author=author, score=score)
+        else:
+            return self.fetch_board_articles_without_query_params(bid=bid, take=take, skip=skip, desc=desc)
 
-        url = _build_url(bid=bid, title=title, author=author,
-                         score=score, page=page)
-        html = self._fetch_html(url)
-
-        result = _parse_page_articles(html)
-
-        if (desc):
-            result.reverse()
-        articles += result
-
-        while len(articles) < take:
-            if (not page):
-                page = _get_prev_page_index(html)
-            elif (title or author or score):
-                page += 1
-            else:
-                page -= 1
-
-            url = _build_url(bid=bid, title=title, author=author,
-                             score=score, page=page)
-            html = self._fetch_html(url)
-
-            result = _parse_page_articles(html)
-
-            if(desc):
-                result.reverse()
-            articles = articles + result
-
-        board = Board(bid=bid, articles=articles[0:take], header=bid)
-
-        return board
+        pass
 
     def fetch_board_atticles_with_query_params(self, bid: str, title: str, author: str, score: int,
                                                take: int, skip: int, desc: bool) -> Board:
 
-        pass
+        page = 1
+        articles = []
+
+        url = _build_url(bid=bid, page=page,
+                         title=title, author=author, score=score)
+
+        html = self._fetch_html(url)
+
+        result = _parse_page_articles(html)
+
+        articles += result
+
+        if (articles):
+            while (len(articles)-skip) < take:
+                page = _get_prev_page_index(html)
+                if (not page):
+                    break
+                url = _build_url(bid=bid, page=page,
+                                 title=title, author=author, score=score)
+                html = self._fetch_html(url)
+
+                result = _parse_page_articles(html)
+
+                articles += result
+
+        board = Board(bid=bid, articles=articles[skip:take+skip], header=bid)
+
+        return board
 
     def fetch_board_articles_without_query_params(self, bid: str,
                                                   take: int, skip: int,
@@ -142,12 +142,15 @@ class BoardService:
         while (len(articles)-skip) < take:
             if (not page):
                 page = _get_prev_page_index(html)
+                if (not page):
+                    break
             elif (not desc):
                 page += 1
             else:
                 page -= 1
 
             url = _build_url(bid=bid, page=page)
+
             html = self._fetch_html(url)
 
             result = _parse_page_articles(html)

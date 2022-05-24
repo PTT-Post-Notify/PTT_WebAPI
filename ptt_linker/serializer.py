@@ -36,3 +36,28 @@ class ArticleDetailSerializer(serializers.Serializer):
     Create_date = serializers.DateTimeField()
     Content = serializers.CharField()
     Comments = CommentSerializer(many=True)
+
+
+class QueryParamsSerializer(serializers.Serializer):
+    Title = serializers.CharField(required=False)
+    Author = serializers.CharField(required=False)
+    Score = serializers.IntegerField(required=False)
+
+    Take = serializers.IntegerField()
+    Skip = serializers.IntegerField()
+
+    def validate(self, data):
+        """
+        At least has one param
+        """
+
+        title: str = data.get('Title')
+        author: str = data.get('Author')
+        score: int = data.get('Score')
+        if not (title or author or score):
+            raise serializers.ValidationError("Must has at least one param")
+
+        if (not title.strip() and not author.strip()):
+            raise serializers.ValidationError("Must has at least one param")
+
+        return data

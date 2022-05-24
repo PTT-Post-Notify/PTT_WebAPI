@@ -1,3 +1,4 @@
+from pydoc import describe
 import re
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -27,8 +28,6 @@ class ArticleView(APIView):
 
 
 @swagger_auto_schema(method='get', manual_parameters=[
-    openapi.Parameter('Title', openapi.IN_QUERY,
-                      description="文章標題", type=openapi.TYPE_STRING),
     openapi.Parameter('Desc', openapi.IN_QUERY,
                       description="是否倒序顯示", type=openapi.TYPE_BOOLEAN, default=True),
     openapi.Parameter('Skip', openapi.IN_QUERY,
@@ -38,23 +37,52 @@ class ArticleView(APIView):
 ])
 @api_view(['GET'])
 def get_board_articles(req: Request, bid: str):
-    _take: str = req.query_params.get('Take') or "20"
+    _takeStr: str = req.query_params.get('Take') or "20"
     _skip: str = req.query_params.get('Skip') or "0"
     _desc: str = req.query_params.get('Desc') or 'True'
 
-    _title: str = req.query_params.get('Title')
+    _take = int(_takeStr) if _takeStr.isnumeric() else 201
+
+    if (_take > 200 or _take < 0):
+        return Response("Take limit is 200 records", status=400)
 
     b_service = BoardService()
     result = b_service.fetch_board_articles(
         bid=bid,
-        title=_title,
+        title=None,
         author=None,
         score=None,
-        take=int(_take) if _take.isnumeric() else 20,
+        take=_take,
         skip=int(_skip) if _skip else 0,
         desc=True if _desc.lower() == "true" else False
     )
 
+    return Response(BoardSerializer(result).data)
+
+
+@swagger_auto_schema(method='post', request_body=QueryParamsSerializer)
+@api_view(['POST'])
+def search_board_articles(req: Request, bid: str):
+    body = req.data
+
+    model_serializer = QueryParamsSerializer(data=body)
+    model_serializer.is_valid(raise_exception=True)
+    model = model_serializer.validated_data
+
+    _take = model.get('Take')
+    if (_take > 200 or _take < 0):
+        return Response("Take limit is 200 records", status=400)
+
+    b_service = BoardService()
+    result = b_service.fetch_board_articles(
+        bid=bid,
+        title=model.get('Title'),
+        author=model.get('Author'),
+        score=model.get('Score'),
+        take=_take,
+        skip=model.get('Skip'),
+        desc=True
+    )
     return Response(BoardSerializer(result).data)
 
 
