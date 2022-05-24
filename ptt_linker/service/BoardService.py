@@ -1,5 +1,3 @@
-from pyparsing import null_debug_action
-from requests import Response, session
 from requests_html import HTMLSession, Element, HTML
 from ptt_linker.models import Board
 from ptt_linker.models.Article import Article
@@ -8,8 +6,9 @@ from ptt_linker.models.Article import Article
 def create_article(input: Element) -> Article:
 
     try:
+        _score = input.find('.nrec', first=True).text
         title = input.find('.title', first=True).text
-        score = int(input.find('.nrec', first=True).text)
+        score = int(_score) if _score.isnumeric() else 0
         author = input.find('.author', first=True).text
         date = input.find('.date', first=True).text
         articleLink = list(input.find('.title', first=True).absolute_links)[0]
@@ -76,7 +75,6 @@ class BoardService:
     def fetch_board_articles(self, bid: str, title: str, author: str, score: int,
                              take: int, skip: int, desc: bool) -> Board:
 
-        take = take or 20
         page = None
         if (title or author or score):
             page = 1
@@ -88,6 +86,8 @@ class BoardService:
 
         result = _parse_page_articles(html)
 
+        if (desc):
+            result.reverse()
         articles += result
 
         while len(articles) < take:
@@ -104,8 +104,15 @@ class BoardService:
 
             result = _parse_page_articles(html)
 
-            articles = result + articles
+            if(desc):
+                result.reverse()
+            articles = articles + result
 
-        board = Board(bid=bid, articles=articles, header=bid)
+        board = Board(bid=bid, articles=articles[0:take], header=bid)
 
         return board
+
+    def fetch_board_atticles_with_query_params(self, bid: str, title: str, author: str, score: int,
+                                               take: int, skip: int, desc: bool) -> Board:
+
+        pass

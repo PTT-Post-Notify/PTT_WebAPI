@@ -38,15 +38,27 @@ class ArticleView(APIView):
 ])
 @api_view(['GET'])
 def get_board_articles(req: Request, bid: str):
-    take = req.query_params.get('take')
+    _take: str = req.query_params.get('Take') or "20"
+    _skip: str = req.query_params.get('Skip') or "0"
+    _desc: str = req.query_params.get('Desc') or 'True'
+
+    _title: str = req.query_params.get('Title')
+
     b_service = BoardService()
     result = b_service.fetch_board_articles(
-        bid, None, None, None, take, None, True)
+        bid=bid,
+        title=_title,
+        author=None,
+        score=None,
+        take=int(_take) if _take.isnumeric() else 20,
+        skip=int(_skip) if _skip else 0,
+        desc=True if _desc.lower() == "true" else False
+    )
 
     return Response(BoardSerializer(result).data)
 
 
-@api_view(['GET'])
+@ api_view(['GET'])
 def get_article_detail(req, bid: str, aid: str):
 
     comments = [Comment(author='User1', comment='Fuck', score=-1),
