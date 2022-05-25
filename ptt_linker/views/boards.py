@@ -1,30 +1,13 @@
-from pydoc import describe
-import re
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
-from rest_framework.views import APIView
 from rest_framework.request import Request
 from rest_framework.response import Response
-from datetime import date, datetime
 from ptt_linker.models import *
 from ptt_linker.serializer import *
-from ptt_linker.service.BoardService import BoardService
+from ptt_linker.service import BoardService
 
 # Create your views here.
-
-
-@api_view(['GET'])
-def SearchData(request):
-    return Response({'Data': 'HAHA'})
-
-
-class ArticleView(APIView):
-
-    def get(self, req, bid, aid):
-        artical = Article(aid=aid, bid=bid, title='this is title',
-                          comments=15, author='Chris', create_date=date.today())
-        return Response(ArticleSerializer(artical).data)
 
 
 @swagger_auto_schema(method='get', manual_parameters=[
@@ -37,6 +20,10 @@ class ArticleView(APIView):
 ])
 @api_view(['GET'])
 def get_board_articles(req: Request, bid: str):
+    """
+    fetch articles from particular board
+    """
+
     _takeStr: str = req.query_params.get('Take') or "20"
     _skip: str = req.query_params.get('Skip') or "0"
     _desc: str = req.query_params.get('Desc') or 'True'
@@ -63,6 +50,10 @@ def get_board_articles(req: Request, bid: str):
 @swagger_auto_schema(method='post', request_body=QueryParamsSerializer)
 @api_view(['POST'])
 def search_board_articles(req: Request, bid: str):
+    """
+    search articles form specific board.
+    """
+
     body = req.data
 
     model_serializer = QueryParamsSerializer(data=body)
@@ -84,15 +75,3 @@ def search_board_articles(req: Request, bid: str):
         desc=True
     )
     return Response(BoardSerializer(result).data)
-
-
-@ api_view(['GET'])
-def get_article_detail(req, bid: str, aid: str):
-
-    comments = [Comment(author='User1', comment='Fuck', score=-1),
-                Comment(author='User2', comment='推推', score=1)]
-
-    article = ArticleDetail(aid=aid, bid=bid, title='this is title', content='WWWWW',
-                            author='Chris', comments=comments, create_date=datetime.now())
-
-    return Response(ArticleDetailSerializer(article).data)

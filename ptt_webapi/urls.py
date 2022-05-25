@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from ptt_linker.views import SearchData,  get_board_articles, search_board_articles
+from ptt_linker.views import get_board_articles, search_board_articles
 
 swagger = get_schema_view(
     openapi.Info(
@@ -33,7 +33,6 @@ swagger = get_schema_view(
 urlpatterns = [
     path('', swagger.with_ui()),
     path('admin/', admin.site.urls),
-    path('test/', SearchData),
     path('board/<str:bid>/articles', get_board_articles),
     path('board/<str:bid>/articles/query', search_board_articles),
     # path('board/<str:bid>/article/<str:aid>', get_article_detail),
