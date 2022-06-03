@@ -1,3 +1,4 @@
+from requests_html import Element
 
 
 class Article:
@@ -13,3 +14,24 @@ class Article:
 
     def __str__(self) -> str:
         return f"{self.bid}/{self.aid} : {self.title}"
+
+    @classmethod
+    def parse(cls, ele: Element):
+
+        try:
+            _score = ele.find('.nrec', first=True).text
+            title = ele.find('.title', first=True).text
+            score = int(_score) if _score.isnumeric() else 0
+            author = ele.find('.author', first=True).text
+            date = ele.find('.date', first=True).text
+            articleLink = list(ele.find(
+                '.title', first=True).absolute_links)[0]
+            bid = articleLink.split('/')[-2]
+            aid = articleLink.split('/')[-1][0:-5]  # remove .html
+            article = cls(aid=aid, bid=bid, author=author, comments_score=score,
+                          create_date=date, title=title, link=articleLink)
+
+        except:
+            return None
+
+        return article

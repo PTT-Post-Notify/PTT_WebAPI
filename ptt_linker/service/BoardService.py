@@ -2,26 +2,6 @@ from requests_html import HTMLSession, Element, HTML
 from ptt_linker.models import Board, Article
 
 
-def create_article(input: Element) -> Article:
-
-    try:
-        _score = input.find('.nrec', first=True).text
-        title = input.find('.title', first=True).text
-        score = int(_score) if _score.isnumeric() else 0
-        author = input.find('.author', first=True).text
-        date = input.find('.date', first=True).text
-        articleLink = list(input.find('.title', first=True).absolute_links)[0]
-        bid = articleLink.split('/')[-2]
-        aid = articleLink.split('/')[-1][0:-5]  # remove .html
-        article = Article(aid=aid, bid=bid, author=author, comments_score=score,
-                          create_date=date, title=title, link=articleLink)
-
-    except:
-        return None
-
-    return article
-
-
 def _build_url(bid: str, page: int,
                title: str = None, author: str = None, score: int = None) -> str:
 
@@ -49,7 +29,7 @@ def _parse_page_articles(html: HTML) -> list[Article]:
             continue
         if 'r-list-sep' in item.attrs['class']:  # 代表後續的文章為至底文章
             break
-        article = create_article(item)
+        article = Article.parse(item)
         if (article):
             articles.append(article)
     return articles
