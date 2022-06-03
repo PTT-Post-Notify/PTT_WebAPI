@@ -1,6 +1,5 @@
 from requests_html import HTMLSession, Element, HTML
-from ptt_linker.models import Board
-from ptt_linker.models.Article import Article
+from ptt_linker.models import Board, Article
 
 
 def create_article(input: Element) -> Article:
