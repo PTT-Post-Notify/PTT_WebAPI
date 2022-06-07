@@ -61,3 +61,11 @@ class QueryParamsSerializer(serializers.Serializer):
             raise serializers.ValidationError("Must has at least one param")
 
         return data
+
+
+class BoardNodeSerializer(serializers.Serializer):
+    Class = serializers.IntegerField(source='parent_cls')
+    Name = serializers.CharField(source='brd_name')
+    Title = serializers.CharField(source='brd_title')
+    Current_users = serializers.IntegerField(source='user_amount')
+    Link = serializers.CharField(source='link')

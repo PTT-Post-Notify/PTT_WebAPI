@@ -1,4 +1,4 @@
-from requests_html import HTMLSession, Element, HTML
+from requests_html import HTMLSession, HTML
 from ptt_linker.models import Board, Article
 
 
