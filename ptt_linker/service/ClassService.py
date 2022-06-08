@@ -1,6 +1,7 @@
-from unittest import result
-from requests_html import HTML, HTMLSession
-
+import asyncio
+from tkinter.messagebox import NO
+from requests_html import HTML, AsyncHTMLSession
+from django.core.cache import cache
 from ptt_linker.models.BoardClass import BoardNode, ClassNode
 
 
@@ -11,48 +12,66 @@ class ClassService:
         return f'https://www.ptt.cc/cls/{cls_num}'
 
     @staticmethod
-    def _fetch_html(url) -> HTML:
-        session = HTMLSession()
-        response = session.get(url, timeout=5)
+    async def _fetch_html(url) -> HTML:
+        session = AsyncHTMLSession()
+        response = await session.get(url, timeout=5)
         return response.html
 
     @staticmethod
-    def fetch_class_boards(cls_number: int, recursive: bool) -> list[BoardNode]:
-        if recursive:
-            return ClassService._fetch_all_board_BFS(cls_number)
-        else:
-            return ClassService._fetch_boards(cls_number)
-
-    @staticmethod
-    def _fetch_boards(cls_number: int) -> list[BoardNode]:
-
-        url = ClassService._build_url(cls_number)
-        html: HTML = ClassService._fetch_html(url)
+    async def _fetch_class_task(url: str) -> ClassNode:
+        html: HTML = await ClassService._fetch_html(url)
         node = ClassNode.parse(html)
-
-        return node.children_brd
+        return node
 
     @staticmethod
-    def _fetch_all_board_BFS(cls_number: int) -> list[BoardNode]:
+    def fetch_class_boards(cls_number: int, recursive: bool) -> list[BoardNode]:
+
+        if recursive:
+            return asyncio.run(ClassService._fetch_boards(cls_number))
+        else:
+            url = ClassService._build_url(cls_number)
+            return asyncio.run(ClassService._fetch_class_task(url)).children_brd
+
+    @staticmethod
+    async def _fetch_boards(cls_number: int) -> list[BoardNode]:
+
+        boards = cache.get(f'class:{cls_number}')
+        if (not boards):
+            boards = await ClassService._fetch_all_board_BFS(cls_number)
+            cache.set(f'class:{cls_number}', boards, None)
+
+        return boards
+
+    @staticmethod
+    async def _fetch_all_board_BFS(cls_number: int) -> list[BoardNode]:
 
         # Use BFS instead DFS to avoid maximum recursion depth issue.
         queue: list[int] = []
         boards: list[BoardNode] = []
+
         queue.append(cls_number)
 
         already_fetch_cls: set[int] = set()
 
-        while queue:
-            current_cls = queue.pop(0)
-            if (current_cls in already_fetch_cls):
-                continue
+        fetch_task = []
 
-            already_fetch_cls.add(current_cls)
+        first_run = True
 
-            url = ClassService._build_url(current_cls)
-            html: HTML = ClassService._fetch_html(url)
-            node = ClassNode.parse(html)
-            queue += node.children_cls
-            boards += node.children_brd
+        while fetch_task or first_run:
+            first_run = False
+            if (fetch_task):
+                class_nodes: list[ClassNode] = await asyncio.gather(*fetch_task)
+                for x in class_nodes:
+                    queue += x.children_cls
+                    boards += x.children_brd
+            fetch_task.clear()
+            while queue:
+                current_cls = queue.pop(0)
+                if (current_cls in already_fetch_cls):
+                    continue
+
+                already_fetch_cls.add(current_cls)
+                url = ClassService._build_url(current_cls)
+                fetch_task.append(ClassService._fetch_class_task(url))
 
         return boards
