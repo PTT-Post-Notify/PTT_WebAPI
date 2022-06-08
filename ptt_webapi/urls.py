@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib import admin
 from django.urls import path
 from drf_yasg.views import get_schema_view
@@ -33,7 +34,7 @@ swagger = get_schema_view(
 
 urlpatterns = [
     path('', swagger.with_ui()),
-    path('admin/', admin.site.urls),
+    # path('admin/', admin.site.urls),
     path('board/<str:bid>/articles', get_board_articles),
     path('board/<str:bid>/articles/query', search_board_articles),
     path('board/<str:bid>/article/<str:aid>', get_article_detail),
@@ -41,3 +42,6 @@ urlpatterns = [
     path('class/<int:cls>', get_particular_class)
     #
 ]
+
+# provide static file in wsgi
+urlpatterns += staticfiles_urlpatterns()
