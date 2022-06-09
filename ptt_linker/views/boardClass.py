@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework.request import Request
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from django.core.cache import cache
 from ptt_linker.service import ClassService
 from ptt_linker.serializer import BoardNodeSerializer
 
@@ -39,4 +38,17 @@ def get_particular_class(req: Request, cls: int):
 
     data = ClassService.fetch_class_boards(cls, recu)
     result = BoardNodeSerializer(data, many=True).data
+    return Response(result)
+
+
+@swagger_auto_schema(
+    method='get',
+    operation_summary='取得熱門看板',
+    operation_description='https://www.ptt.cc/bbs/hotboards.html'
+)
+@api_view(['GET'])
+def get_hotboards(req: Request):
+
+    hotBoards = ClassService.fetch_hotboards()
+    result = BoardNodeSerializer(hotBoards, many=True).data
     return Response(result)

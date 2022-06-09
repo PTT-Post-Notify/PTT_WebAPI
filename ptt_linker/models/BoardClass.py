@@ -35,9 +35,8 @@ class ClassNode:
         self.children_brd = children_brd
 
     @classmethod
-    def parse(cls, html: HTML):
+    def parse(cls, cls_number: int, html: HTML):
 
-        current_cls = int(html.url.split('/')[-1])
         children = html.find('.b-ent')
 
         children_cls: set[int] = set()
@@ -49,13 +48,13 @@ class ClassNode:
                 is_board = link.startswith('/bbs')
 
                 if is_board:
-                    children_brd.append(BoardNode.parse(current_cls, child))
+                    children_brd.append(BoardNode.parse(cls_number, child))
                 else:  # eg. cls/15
                     children_cls.add(int(link.split('/')[-1]))
             except:
                 continue
 
-        instance = cls(cls_number=current_cls,
+        instance = cls(cls_number=cls_number,
                        children_cls=children_cls,
                        children_brd=children_brd)
 

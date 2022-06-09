@@ -1,4 +1,5 @@
 import asyncio
+from os import stat
 from tkinter.messagebox import NO
 from requests_html import HTML, AsyncHTMLSession
 from django.core.cache import cache
@@ -18,9 +19,10 @@ class ClassService:
         return response.html
 
     @staticmethod
-    async def _fetch_class_task(url: str) -> ClassNode:
+    async def _fetch_class_task(cls_num: str) -> ClassNode:
+        url = ClassService._build_url(cls_num)
         html: HTML = await ClassService._fetch_html(url)
-        node = ClassNode.parse(html)
+        node = ClassNode.parse(cls_num, html)
         return node
 
     @staticmethod
@@ -29,8 +31,7 @@ class ClassService:
         if recursive:
             return asyncio.run(ClassService._fetch_boards(cls_number))
         else:
-            url = ClassService._build_url(cls_number)
-            return asyncio.run(ClassService._fetch_class_task(url)).children_brd
+            return asyncio.run(ClassService._fetch_class_task(cls_number)).children_brd
 
     @staticmethod
     async def _fetch_boards(cls_number: int) -> list[BoardNode]:
@@ -71,7 +72,16 @@ class ClassService:
                     continue
 
                 already_fetch_cls.add(current_cls)
-                url = ClassService._build_url(current_cls)
-                fetch_task.append(ClassService._fetch_class_task(url))
+                fetch_task.append(
+                    ClassService._fetch_class_task(int(current_cls)))
 
         return boards
+
+    @staticmethod
+    def fetch_hotboards() -> list[BoardNode]:
+
+        url = 'https://www.ptt.cc/bbs/hotboards.html'
+        html = asyncio.run(ClassService._fetch_html(url))
+        node = ClassNode.parse(0, html)
+
+        return node.children_brd

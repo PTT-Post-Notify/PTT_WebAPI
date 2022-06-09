@@ -38,11 +38,12 @@ swagger = get_schema_view(
 urlpatterns = [
     path('', swagger.with_ui()),
     # path('admin/', admin.site.urls),
-    path('board/<str:bid>/articles', get_board_articles),
-    path('board/<str:bid>/articles/query', search_board_articles),
-    path('board/<str:bid>/article/<str:aid>', get_article_detail),
-    path('class/', get_all_class),
-    path('class/<int:cls>', get_particular_class)
+    path('Class/All', get_all_class),
+    path('Class/HotBoards', get_hotboards),
+    path('Class/<int:cls>', get_particular_class),
+    path('Board/<str:bid>/articles', get_board_articles),
+    path('Board/<str:bid>/articles/query', search_board_articles),
+    path('Board/<str:bid>/article/<str:aid>', get_article_detail),
     #
 ]
 
