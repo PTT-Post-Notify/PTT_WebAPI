@@ -18,4 +18,6 @@ def get_article_detail(req, bid: str, aid: str):
 
     article = service.fetch_article_detail(bid, aid)
 
+    if (not article):
+        return Response(f"Article ID : '{aid}' cannot be found in '{bid}'")
     return Response(ArticleDetailSerializer(article).data)

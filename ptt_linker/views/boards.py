@@ -47,6 +47,9 @@ def get_board_articles(req: Request, bid: str):
         desc=True if _desc.lower() == "true" else False
     )
 
+    if (not result):
+        return Response(f"Board Name : '{bid}' cannot be found")
+
     return Response(BoardSerializer(result).data)
 
 
@@ -82,4 +85,8 @@ def search_board_articles(req: Request, bid: str):
         skip=model.get('Skip'),
         desc=True
     )
+
+    if (not result):
+        return Response(f"Board Name : '{bid}' cannot be found")
+
     return Response(BoardSerializer(result).data)

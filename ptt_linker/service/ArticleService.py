@@ -12,16 +12,20 @@ def _url_builder(bid: str, aid: str):
 
 class ArticleService():
 
-    def _fetch_html(self, url) -> HTML:
+    def _fetch_html(self, url) -> HTML | None:
         session = HTMLSession()
         response = session.get(url)
+        if (response.status_code != 200):
+            return None
         return response.html
 
-    def fetch_article_detail(self, bid: str, aid: str) -> ArticleDetail:
+    def fetch_article_detail(self, bid: str, aid: str) -> ArticleDetail | None:
 
         url = _url_builder(bid, aid)
         html = self._fetch_html(url)
 
+        if (not html):
+            return None
         article = ArticleDetail.parse(bid, aid, html)
 
         return article

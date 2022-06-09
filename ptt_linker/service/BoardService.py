@@ -51,9 +51,11 @@ def _get_prev_page_index(html: HTML) -> int:
 
 class BoardService:
 
-    def _fetch_html(self, url) -> HTML:
+    def _fetch_html(self, url) -> HTML | None:
         session = HTMLSession()
         response = session.get(url)
+        if (response.status_code != 200):
+            return None
         return response.html
 
     def fetch_board_articles(self, bid: str, title: str, author: str, score: int,
@@ -65,8 +67,6 @@ class BoardService:
         else:
             return self.fetch_board_articles_without_query_params(bid=bid, take=take, skip=skip, desc=desc)
 
-        pass
-
     def fetch_board_atticles_with_query_params(self, bid: str, title: str, author: str, score: int,
                                                take: int, skip: int, desc: bool) -> Board:
 
@@ -77,6 +77,8 @@ class BoardService:
                          title=title, author=author, score=score)
 
         html = self._fetch_html(url)
+        if (not html):
+            return None
 
         result = _parse_page_articles(html)
 
@@ -111,6 +113,8 @@ class BoardService:
 
         url = _build_url(bid=bid, page=page)
         html = self._fetch_html(url)
+        if (not html):
+            return None
 
         result = _parse_page_articles(html)
 
