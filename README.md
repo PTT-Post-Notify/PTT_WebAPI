@@ -9,6 +9,13 @@ WebAPI for PTT bbs
 相關開發者可關注在應用邏輯本身，而無須關心爬蟲方式  
 使用方式請見 **[Swagger UI](https://ptt-webapi-ciqjdh7yiq-de.a.run.app)**
 
+由於此專案只是提供 API 的方式供使用者訪問 PTT.CC 的 WEB 版本  
+因此功能會受限於網頁版 PTT 的能力限制
+
+我會隨時追蹤 PTT Web BBS 是否有新增功能，並迅速補上
+
+如有問題回報或是有功能建議，歡迎提 Issue 或 PR
+
 <br>
 
 # Note
