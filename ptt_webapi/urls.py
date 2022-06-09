@@ -26,10 +26,13 @@ swagger = get_schema_view(
         title="PTT WebAPI",
         description="Provide RESTFul API to access ptt.cc",
         default_version='v1',
-        # terms_of_service="https://www.google.com/policies/terms/",
-        # contact=openapi.Contact(email="contact@snippets.local"),
-        # license=openapi.License(name="BSD License"),
+        terms_of_service="https://github.com/MakotoAtsu/PTT_WebAPI",
+        contact=openapi.Contact(
+            name="MakotoAtsu",
+            url="https://github.com/MakotoAtsu"
+        ),
     ),
+    public=True
 )
 
 urlpatterns = [
